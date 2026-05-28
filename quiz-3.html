@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3 Quiz | Nexus Academy</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-bg: #0f172a; 
+            --card-bg: #1e293b; 
+            --accent-color: #0d6efd; 
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+
+        .quiz-header { padding: 30px; border-bottom: 1px solid var(--border-color); }
+        .course-badge { color: #60a5fa; font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; }
+        .progress-container { height: 8px; background-color: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 20px; overflow: hidden; }
+        .progress-bar-custom { height: 100%; background-color: var(--accent-color); transition: width 0.3s ease; }
+
+        .quiz-body { padding: 40px 30px; min-height: 350px; }
+        .question-text { font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; line-height: 1.4; }
+        
+        .option-btn {
+            display: block; width: 100%; text-align: left;
+            background-color: rgba(255,255,255,0.03); border: 1px solid var(--border-color);
+            color: var(--text-main); padding: 15px 20px; border-radius: 10px;
+            margin-bottom: 15px; font-size: 1.1rem; transition: all 0.2s ease; cursor: pointer;
+        }
+        .option-btn:hover { background-color: rgba(255,255,255,0.08); }
+        .option-btn.selected { background-color: rgba(13, 110, 253, 0.15); border-color: var(--accent-color); color: #fff; box-shadow: 0 0 0 2px rgba(13,110,253,0.3); }
+
+        .navigator-section { padding: 0 30px 20px 30px; }
+        .nav-box {
+            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;
+            font-weight: 600; font-size: 0.9rem; transition: 0.2s; 
+            background: rgba(255,255,255,0.03); color: var(--text-muted);
+        }
+        .nav-box:hover { background: rgba(255,255,255,0.1); }
+        .nav-box.answered { background: rgba(13, 110, 253, 0.2); border-color: var(--accent-color); color: #fff; }
+        .nav-box.current { box-shadow: 0 0 0 2px #fff; border-color: #fff; color: #fff; }
+
+        .quiz-footer {
+            padding: 20px 30px; border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        /* --- UPDATED RESULTS SCREEN STYLES --- */
+        .results-screen { display: none; text-align: center; padding: 60px 30px; }
+        
+        .score-circle {
+            width: 180px; height: 180px; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin: 0 auto 30px auto; font-size: 2.2rem; font-weight: 800; border: 8px solid;
+            background-color: rgba(0,0,0,0.2);
+            line-height: 1;
+        }
+        .score-circle i { font-size: 3.5rem; margin-bottom: 5px; } /* Controls the giant Tick/Cross size */
+        
+        .score-pass { border-color: var(--success-color); color: var(--success-color); }
+        .score-fail { border-color: var(--danger-color); color: var(--danger-color); }
+        
+        .btn-close-custom { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+        .btn-close-custom:hover { color: #fff; }
+
+        /* Mobile responsiveness adjustments */
+        @media (max-width: 576px) {
+            .quiz-header { padding: 20px; }
+            .quiz-body { padding: 30px 20px; min-height: auto; }
+            .navigator-section { padding: 0 20px 20px 20px; }
+            .quiz-footer { padding: 20px; flex-direction: column; gap: 10px; }
+            .quiz-footer button { width: 100%; }
+            .question-text { font-size: 1.25rem; }
+            .btn-close-custom { top: 15px; right: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container position-relative">
+        
+        <i class="bi bi-x-lg btn-close-custom" onclick="closeQuiz()"></i>
+
+        <div id="quizUI">
+            <div class="quiz-header pt-4">
+                <span class="course-badge">Module 3 Assessment</span>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <h3 class="mb-0 fw-bold">JavaScript Foundations</h3>
+                    <span class="badge bg-secondary rounded-pill px-3 py-2" id="questionTracker">Question 1 of 20</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar-custom" id="progressBar" style="width: 5%;"></div>
+                </div>
+            </div>
+
+            <div class="quiz-body">
+                <div class="question-text" id="questionText">Loading question...</div>
+                <div id="optionsContainer">
+                    </div>
+            </div>
+
+            <div class="navigator-section border-top pt-4">
+                <h6 class="text-muted mb-3" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">Question Navigator (Click to jump)</h6>
+                <div id="questionNavigator" class="d-flex flex-wrap gap-2">
+                    </div>
+            </div>
+
+            <div class="quiz-footer">
+                <button class="btn btn-outline-light fw-bold px-4 rounded-pill" id="prevBtn" onclick="changeQuestion(-1)" disabled>
+                    <i class="bi bi-arrow-left me-2"></i>Previous
+                </button>
+                <button class="btn btn-primary fw-bold px-4 rounded-pill" id="nextBtn" onclick="changeQuestion(1)">
+                    Next<i class="bi bi-arrow-right ms-2"></i>
+                </button>
+                <button class="btn btn-success fw-bold px-4 rounded-pill d-none" id="submitBtn" onclick="submitQuiz()">
+                    <i class="bi bi-check-circle-fill me-2"></i>Submit Quiz
+                </button>
+            </div>
+        </div>
+
+        <div id="resultsUI" class="results-screen">
+            <h2 class="fw-bold mb-4" id="resultGreeting">Assessment Complete</h2>
+            
+            <div class="score-circle" id="scoreCircle">
+                </div>
+            
+            <h4 class="text-white mb-3" id="scoreFraction">You scored 0 out of 20</h4>
+            <p class="lead text-muted mb-5 px-md-5" id="resultMessage" style="font-size: 1.1rem;"></p>
+            
+            <div id="actionButtons">
+                </div>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            { question: "Which keyword is used to declare a variable whose value should never change?", options: ["const", "let", "var", "static"], answer: 0 },
+            { question: "What specific data type is the value 'true'?", options: ["String", "Number", "Array", "Boolean"], answer: 3 },
+            { question: "How do you correctly write a String in JavaScript?", options: ["Wrapped in square brackets []", "Wrapped in quotation marks \"\"", "Wrapped in parentheses ()", "By capitalizing the first letter"], answer: 1 },
+            { question: "If you add two strings together, like \"10\" + \"10\", what will JavaScript output?", options: ["20", "An Error", "\"1010\"", "undefined"], answer: 2 },
+            { question: "What does DOM stand for?", options: ["Document Object Model", "Data Output Method", "Digital Object Maker", "Document Orientation Module"], answer: 0 },
+            { question: "Which method is used to find a specific HTML element by its ID?", options: ["querySelectorAll()", "document.getElementById()", "selectId()", "grabElement()"], answer: 1 },
+            { question: "What is the primary purpose of an if/else statement?", options: ["To style elements", "To perform mathematical calculations", "To make decisions based on conditions (Flow Control)", "To repeat an action 100 times"], answer: 2 },
+            { question: "At what number do JavaScript Arrays start counting (their index)?", options: ["1", "-1", "10", "0"], answer: 3 },
+            { question: "Which array method is used to add a new item to the end of a list?", options: [".add()", ".push()", ".insert()", ".append()"], answer: 1 },
+            { question: "What do we call a reusable block of code that performs one specific job?", options: ["A Function", "An Array", "A Loop", "An Object"], answer: 0 },
+            { question: "What keyword does a function use to send a value back to where it was called?", options: ["export", "send", "output", "return"], answer: 3 },
+            { question: "Which tool is best for repeating the exact same action a specific number of times?", options: ["if statement", "for loop", "const variable", "DOM element"], answer: 1 },
+            { question: "What concept determines where a variable can be seen or used in your code?", options: ["Scope", "DOM", "Events", "Nodes"], answer: 0 },
+            { question: "A variable created INSIDE a function is known as having what kind of scope?", options: ["Global Scope", "Universal Scope", "Local Scope", "Static Scope"], answer: 2 },
+            { question: "What method do we use to tell JavaScript to wait for a user action, like a button click?", options: ["onclick()", "addEventListener()", "listenEvent()", "appendChild()"], answer: 1 },
+            { question: "Which command creates a brand new HTML element purely in the computer's memory?", options: ["document.make()", "document.new()", "document.createElement()", "document.addNode()"], answer: 2 },
+            { question: "After creating a new element in memory, which command physically attaches it to the visible website tree?", options: ["insertHTML()", "appendChild()", "addNode()", "push()"], answer: 1 },
+            { question: "Why should you use 'let' instead of 'const' when creating a variable for a shopping cart total?", options: ["'let' executes faster", "Because the total value will change as items are added", "Because 'const' only holds text", "It is just a stylistic preference"], answer: 1 },
+            { question: "In the array `let colors = ['Red', 'Blue', 'Green'];`, what is the index position of 'Blue'?", options: ["0", "1", "2", "3"], answer: 1 },
+            { question: "What happens if code OUTSIDE a function tries to read a Local variable created INSIDE that function?", options: ["It reads it successfully", "It returns the word 'undefined'", "It automatically converts it to Global", "It results in an Error because the variable is private to the function"], answer: 3 }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(quizData.length).fill(null); 
+
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const tracker = document.getElementById('questionTracker');
+        const progressBar = document.getElementById('progressBar');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const navGrid = document.getElementById('questionNavigator');
+
+        function loadQuestion() {
+            const currentData = quizData[currentQuestionIndex];
+            questionText.innerText = `${currentQuestionIndex + 1}. ${currentData.q || currentData.question}`;
+            tracker.innerText = `Question ${currentQuestionIndex + 1} of ${quizData.length}`;
+            const progressPercentage = ((currentQuestionIndex + 1) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+
+            optionsContainer.innerHTML = '';
+            currentData.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = option;
+                if (userAnswers[currentQuestionIndex] === index) { btn.classList.add('selected'); }
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            prevBtn.disabled = currentQuestionIndex === 0;
+            if (currentQuestionIndex === quizData.length - 1) {
+                nextBtn.classList.add('d-none');
+                submitBtn.classList.remove('d-none');
+            } else {
+                nextBtn.classList.remove('d-none');
+                submitBtn.classList.add('d-none');
+            }
+            renderNavigator();
+        }
+
+        function selectOption(selectedIndex, buttonElement) {
+            userAnswers[currentQuestionIndex] = selectedIndex;
+            const allButtons = optionsContainer.querySelectorAll('.option-btn');
+            allButtons.forEach(btn => btn.classList.remove('selected'));
+            buttonElement.classList.add('selected');
+            renderNavigator(); 
+        }
+
+        function changeQuestion(direction) {
+            currentQuestionIndex += direction;
+            loadQuestion();
+        }
+
+        function renderNavigator() {
+            navGrid.innerHTML = '';
+            for (let i = 0; i < quizData.length; i++) {
+                const box = document.createElement('div');
+                box.className = 'nav-box';
+                box.innerText = i + 1;
+                if (i === currentQuestionIndex) box.classList.add('current');
+                if (userAnswers[i] !== null) box.classList.add('answered');
+                box.onclick = () => { currentQuestionIndex = i; loadQuestion(); };
+                navGrid.appendChild(box);
+            }
+        }
+
+        // --- UPDATED SUBMIT FUNCTION (CUSTOM MESSAGES & ICONS) ---
+        function submitQuiz() {
+            const skippedQuestions = userAnswers.filter(a => a === null).length;
+            if (skippedQuestions > 0) {
+                const confirmSubmit = confirm(`Wait! You have ${skippedQuestions} unattempted questions. Are you sure you want to submit your quiz?`);
+                if (!confirmSubmit) return; 
+            }
+
+            let score = 0;
+            for (let i = 0; i < quizData.length; i++) {
+                const correctAnswerIndex = quizData[i].answer !== undefined ? quizData[i].answer : quizData[i].correct;
+                if (userAnswers[i] === correctAnswerIndex) score++;
+            }
+            const percentage = Math.round((score / quizData.length) * 100);
+
+            document.getElementById('quizUI').style.display = 'none';
+            document.getElementById('resultsUI').style.display = 'block';
+
+            const scoreCircle = document.getElementById('scoreCircle');
+            const resultMessage = document.getElementById('resultMessage');
+            const actionButtons = document.getElementById('actionButtons');
+            
+            document.getElementById('scoreFraction').innerText = `You scored ${score} out of ${quizData.length}`;
+
+            if (percentage >= 70) {
+                // PASSING SCENARIO
+                scoreCircle.className = "score-circle score-pass shadow-lg";
+                scoreCircle.innerHTML = `<i class="bi bi-check-circle-fill"></i><span>${percentage}%</span>`;
+                
+                resultMessage.innerHTML = "<strong class='text-white'>Outstanding work!</strong> You have successfully demonstrated your understanding of the JavaScript fundamentals. You are fully prepared to advance to the next stage of the course.";
+                
+                actionButtons.innerHTML = `<button class="btn btn-success fw-bold px-5 py-3 rounded-pill shadow-lg" onclick="takeNextStep()">
+                                              Take the Next Step <i class="bi bi-rocket-takeoff-fill ms-2"></i>
+                                           </button>`;
+            } else {
+                // FAILING SCENARIO
+                scoreCircle.className = "score-circle score-fail shadow-lg";
+                scoreCircle.innerHTML = `<i class="bi bi-x-circle-fill"></i><span>${percentage}%</span>`;
+                
+                resultMessage.innerHTML = "<strong class='text-white'>Don't give up!</strong> You didn't quite hit the 70% passing mark required. Review your notes, revisit the module materials, and try again when you are ready.";
+                
+                actionButtons.innerHTML = `<button class="btn btn-danger fw-bold px-5 py-3 rounded-pill shadow-lg" onclick="retryQuiz()">
+                                              <i class="bi bi-arrow-clockwise me-2"></i> Retry Quiz
+                                           </button>`;
+            }
+        }
+
+        // --- NEW: RETRY ENGINE ---
+        function retryQuiz() {
+            // Reset all data
+            currentQuestionIndex = 0;
+            userAnswers = new Array(quizData.length).fill(null);
+            
+            // Swap screens back
+            document.getElementById('resultsUI').style.display = 'none';
+            document.getElementById('quizUI').style.display = 'block';
+            
+            // Reload the first question
+            loadQuestion();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- NEW: NEXT STEP ENGINE ---
+        function takeNextStep() {
+            // Closes the modal and goes back to the dashboard, or you can route them to the next module
+            if (window.self !== window.top) {
+                parent.document.querySelector('.btn-close').click();
+            } else {
+                window.location.href = "https://pk.nexus-academy.site/course-room"; 
+            }
+        }
+
+        function closeQuiz() {
+            if (window.self !== window.top) {
+                parent.document.querySelector('.btn-close').click();
+            } else {
+                window.location.href = "https://pk.nexus-academy.site/course-room"; 
+            }
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
